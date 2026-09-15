@@ -1,0 +1,199 @@
+---
+# High-value, low-configuration pre-commit setup for TypeScript repositories.
+#
+# Install:
+#   uv tool install pre-commit
+#   pre-commit install
+#
+# Run everything once:
+#   pre-commit run --all-files
+#
+# Update pinned hook versions:
+#   pre-commit autoupdate
+
+minimum_pre_commit_version: "3.2.0"
+fail_fast: false
+
+repos:
+  # Repository hygiene and cheap correctness checks.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-illegal-windows-names
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-xml
+      - id: check-yaml
+      - id: debug-statements
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: forbid-new-submodules
+      - id: mixed-line-ending
+        args: [--fix, lf]
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+      - id: fix-byte-order-marker
+
+    #~ # Source: 300_mdformat.yaml [central]
+    #~ - repo: https://github.com/executablebooks/mdformat
+    #~ rev: 1.0.0
+    #~ hooks:
+    #~ - id: mdformat
+    #~ args: [--number, --wrap, '120']
+    #~ additional_dependencies:
+    #~ - mdformat-gfm
+    #~ - mdformat-ruff
+    #~ - ruff
+
+  - repo: local
+    hooks:
+      - id: no-spaces-in-filenames
+        name: Check for spaces in filenames
+        entry: Filenames must not contain spaces
+        language: fail
+        files: \s
+
+  #~ # Fast formatter for JS / JSX / TS / TSX. Writes safe formatting fixes.
+  #~ - repo: https://github.com/oxc-project/mirrors-oxfmt
+    #~ rev: v0.67.0
+    #~ hooks:
+      #~ - id: oxfmt
+
+    # Fast JS / TS linter.
+    # Default correctness rules + suspicious rules; warnings fail the commit.
+    # --fix applies only Oxlint's safe fixes.
+    #~ - repo: https://github.com/oxc-project/mirrors-oxlint
+    #~ rev: v1.82.0
+    #~ hooks:
+    #~ - id: oxlint
+    #~ args:
+    #~ - --fix
+    #~ - -D
+    #~ - suspicious
+    #~ - --deny-warnings
+    #~ - --report-unused-disable-directives
+
+  # Secret scanning using Gitleaks' built-in rules.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # Dependency vulnerability scanning.
+  # Scans supported lockfiles / manifests recursively with OSV's public database.
+  - repo: https://github.com/google/osv-scanner
+    rev: v2.4.0
+    hooks:
+      - id: osv-scanner
+
+  # GitHub Actions static analysis; only runs when workflow YAML files change.
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+
+  # Shell static analysis; only runs for shell scripts.
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+
+  # Source: 680_hadolint.yaml [central]
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.15.1
+    hooks:
+      - id: hadolint
+        files: (^|/)Dockerfile[^/]*$
+
+  # Source: 690_sqlfluff.yaml [central]
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 4.3.0
+    hooks:
+      - id: sqlfluff-lint
+        files: \.sql$
+        args: [--dialect=ansi]
+
+  # Source: 900_shfmt.yaml [central]
+  - repo: https://github.com/maxwinterstein/shfmt-py
+    rev: v4.0.0
+    hooks:
+      - id: shfmt
+
+  #~ # Source: 305_typos.yaml [central]
+  #~ - repo: https://github.com/crate-ci/typos
+  #~ rev: v1.48.0
+  #~ hooks:
+  #~ - id: typos
+
+  # Source: 307_rstcheck.yaml [central]
+  - repo: https://github.com/rstcheck/rstcheck
+    rev: v6.3.0
+    hooks:
+      - id: rstcheck
+
+  #~ # Source: 310_prettier.yaml [central]
+  #~ - repo: https://github.com/rbubley/mirrors-prettier
+  #~ rev: v3.9.6
+  #~ hooks:
+  #~ - id: prettier
+  #~ args: [--write]
+  #~ files: \.(?i:css|graphql|html|js|jsx|json|scss|ts|tsx|vue|yaml|yml)$
+  #~ exclude: \.(?i:md|toml|yaml|yml)$
+
+  # Source: 330_tombi.yaml [central]
+  - repo: local
+    hooks:
+      - id: tombi-formatter
+        name: Tombi TOML linter
+        entry: uvx tombi format
+        language: system
+        types: [toml]
+
+      - id: tombi-linter
+        name: Tombi TOML linter
+        entry: uvx tombi lint --error-on-warnings
+        language: system
+        types: [toml]
+
+  # Source: 331_check_jsonschema.yaml [central]
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.38.0
+    hooks:
+      - id: check-compose-spec
+      - id: check-dependabot
+      - id: check-github-actions
+      - id: check-github-workflows
+      - id: check-renovate
+
+  # Source: 340_dotenv_linter.yaml [central]
+  - repo: https://github.com/wemake-services/dotenv-linter
+    rev: 0.9.0
+    hooks:
+      - id: dotenv-linter
+
+  # Source: 512_osv_scanner.yaml [central]
+  - repo: https://github.com/google/osv-scanner
+    rev: v2.5.1
+    hooks:
+      - id: osv-scanner
+
+  # Source: 513_trufflehog.yaml [central]
+  - repo: https://github.com/trufflesecurity/trufflehog
+    rev: v3.97.0
+    hooks:
+      - id: trufflehog
+
+  # Source: 514_detect_secrets.yaml [central]
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
